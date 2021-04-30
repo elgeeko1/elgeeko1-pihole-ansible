@@ -1,0 +1,9 @@
+---
+- name: Configure systemd-resolved
+  include_tasks: systemd-resolved.yml
+
+- name: Configure filesystem
+  include_tasks: filesystem.yml
+
+- name: Start pihole container
+  include_tasks: pihole.yml

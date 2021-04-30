@@ -1,0 +1,12 @@
+# ports to publish for pihole
+pihole_ports:
+  - "53:53/tcp"
+  - "53:53/udp"
+  - "[::0]:53:53/tcp"
+  - "[::0]:53:53/udp"
+  - "80:80/tcp"
+  - "[::0]:80:80/tcp"
+
+# is a restart of the pihole container required?
+# set by handlers when configuration changes
+pihole_restart_required: false

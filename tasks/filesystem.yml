@@ -1,0 +1,18 @@
+---
+- name: Create pihole directory {{ pihole_path }}
+  file:
+    path: "{{ pihole_path }}"
+    state: directory
+  become: true
+
+- name: Create pihole persistent data directory
+  file:
+    path: "{{ pihole_path }}/data"
+    state: directory
+  become: true
+
+- name: Create dnsmasq directory
+  file:
+    path: "{{ pihole_path }}/dnsmasq.d"
+    state: directory
+  become: true

@@ -1,0 +1,30 @@
+# filesystem location to save persistent pihole data
+pihole_path: /opt/pihole
+
+# docker network mode for the pihole container
+# may be 'bridge' or 'host'
+pihole_network_mode: bridge
+
+# network addresses for pihole
+pihole_ipv4_address: "{{ ansible_default_ipv4.address | default(ansible_all_ipv4_addresses[0]) }}"
+pihole_ipv6_address: "{{ ansible_default_ipv6.address | default(ansible_all_ipv6_addresses[0]) }}"
+pihole_ipv6_enabled: false
+
+# default to quad9 DNS resolvers
+pihole_dns: "9.9.9.9#53;149.112.112.112#53;2620:fe::fe#53;2620:fe::9#53"
+
+# pihole web UI password
+# default password is 'pihole'
+pihole_web_password: pihole
+
+# pihole privacy level, 0 is everything, 3 is none
+pihole_privacy_level: 0
+
+# log queries in dnsmasque?
+pihole_query_logging: true
+
+# dnssec?
+pihole_dnssec: false
+
+# timezone for pihole UI and logging
+pihole_timezone: "America/Los_Angeles"
