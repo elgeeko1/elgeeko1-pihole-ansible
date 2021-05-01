@@ -63,7 +63,7 @@
     env:
       ServerIP: "{{ pihole_ipv4_address }}"
       ServerIPv6: "{{ pihole_ipv6_address }}"
-      IPv6: "{{ pihole_ipv6_enabled }}"
+      IPv6: "{{ pihole_ipv6_enabled | string }}"
       DNSMASQ_LISTENING: "all"
       DNSSEC: "{{ pihole_dnssec | string }}"
       QUERY_LOGGING: "{{ pihole_query_logging | string }}"
