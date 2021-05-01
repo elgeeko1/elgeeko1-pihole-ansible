@@ -34,7 +34,7 @@
   lineinfile:
     path: "{{ pihole_path }}/data/setupVars.conf"
     regexp: "^IPV6_ADDRESS"
-    line: "IPV6_ADDRESS={{ pihole_ipv6_address }}"
+    line: "IPV6_ADDRESS={{ pihole_ipv6_enabled | ternary(pihole_ipv6_address, '') }}"
   become: true
   notify: pihole_restart_required
 
