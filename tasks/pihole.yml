@@ -62,7 +62,7 @@
       - CAP_SYS_NICE
     env:
       ServerIP: "{{ pihole_ipv4_address }}"
-      ServerIPv6: "{{ pihole_ipv6_address }}"
+      ServerIPv6: "{{ pihole_ipv6_enabled | ternary(pihole_ipv6_address, '') }}"
       IPv6: "{{ pihole_ipv6_enabled | string }}"
       DNSMASQ_LISTENING: "all"
       DNSSEC: "{{ pihole_dnssec | string }}"
