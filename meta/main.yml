@@ -1,5 +1,5 @@
 galaxy_info:
-  role_name: pihole
+  role_name: elgeeko1-pihole-ansible
   author: elgeeko1
   description: "Deploy pihole in a docker container."
   license: MIT
