@@ -1,17 +1,10 @@
 ---
-- name: Docker pull pihole/pihole:latest
-  docker_image:
-    name: pihole/pihole:latest
-    source: pull
-    force_source: true
-  notify: pihole_restart_required
-
 # pihole bug: WEBPASSWORD is read when the pihole container
 # starts up, and is not overridden by the environemnt variable.
 # Write the hashed password here to fix. The password hash
 # is double sha256
 - name: Set WEBPASSWORD in setupVars.conf
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: "{{ pihole_path }}/data/setupVars.conf"
     regexp: "^WEBPASSWORD"
     line: "WEBPASSWORD={{ pihole_web_password | hash('sha256') | hash('sha256') }}"
@@ -21,7 +14,7 @@
 # pihole bug: IPV4_ADDRESS may hold an old value
 # unless updated in setupVars.conf
 - name: Set IPV4_ADDRESS in setupVars.conf
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: "{{ pihole_path }}/data/setupVars.conf"
     regexp: "^IPV4_ADDRESS"
     line: "IPV4_ADDRESS={{ pihole_ipv4_address }}"
@@ -31,18 +24,25 @@
 # pihole bug: IPV6_ADDRESS may hold an old value
 # unless updated in setupVars.conf
 - name: Set IPV6_ADDRESS in setupVars.conf
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: "{{ pihole_path }}/data/setupVars.conf"
     regexp: "^IPV6_ADDRESS"
     line: "IPV6_ADDRESS={{ pihole_ipv6_enabled | ternary(pihole_ipv6_address, '') }}"
   become: true
   notify: pihole_restart_required
 
+- name: Docker pull pihole/pihole:latest
+  community.general.docker_image:
+    name: pihole/pihole:latest
+    source: pull
+    force_source: true
+  notify: pihole_restart_required
+
 - name: Flush handlers to set variable pihole_restart_required
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
 
 - name: Start pihole docker container
-  docker_container:
+  community.general.docker_container:
     name: pihole
     image: pihole/pihole:latest
     state: started
@@ -72,6 +72,6 @@
       TZ: "{{ pihole_timezone }}"
 
 - name: Wait for pihole service to start
-  wait_for:
+  ansible.builtin.wait_for:
     port: 53
     timeout: 10

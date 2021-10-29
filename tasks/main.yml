@@ -1,9 +1,15 @@
 ---
+- name: apt update cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600 # 1 hr
+  become: true
+
 - name: Configure systemd-resolved
-  include_tasks: systemd-resolved.yml
+  ansible.builtin.import_tasks: systemd-resolved.yml
 
 - name: Configure filesystem
-  include_tasks: filesystem.yml
+  ansible.builtin.import_tasks: filesystem.yml
 
 - name: Start pihole container
-  include_tasks: pihole.yml
+  ansible.builtin.import_tasks: pihole.yml
