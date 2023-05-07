@@ -10,6 +10,6 @@
 - name: Restart systemd-resolved service
   service:
     name: systemd-resolved
-    status: restarted
+    state: restarted
   become: true
   when: systemd.changed

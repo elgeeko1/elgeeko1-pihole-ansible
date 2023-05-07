@@ -1,45 +1,9 @@
 ---
-# pihole bug: WEBPASSWORD is read when the pihole container
-# starts up, and is not overridden by the environemnt variable.
-# Write the hashed password here to fix. The password hash
-# is double sha256
-- name: Set WEBPASSWORD in setupVars.conf
-  ansible.builtin.lineinfile:
-    path: "{{ pihole_path }}/data/setupVars.conf"
-    regexp: "^WEBPASSWORD"
-    line: "WEBPASSWORD={{ pihole_web_password | hash('sha256') | hash('sha256') }}"
-  notify: pihole_restart_required
-  become: true
-
-# pihole bug: IPV4_ADDRESS may hold an old value
-# unless updated in setupVars.conf
-- name: Set IPV4_ADDRESS in setupVars.conf
-  ansible.builtin.lineinfile:
-    path: "{{ pihole_path }}/data/setupVars.conf"
-    regexp: "^IPV4_ADDRESS"
-    line: "IPV4_ADDRESS={{ pihole_ipv4_address }}"
-  become: true
-  notify: pihole_restart_required
-
-# pihole bug: IPV6_ADDRESS may hold an old value
-# unless updated in setupVars.conf
-- name: Set IPV6_ADDRESS in setupVars.conf
-  ansible.builtin.lineinfile:
-    path: "{{ pihole_path }}/data/setupVars.conf"
-    regexp: "^IPV6_ADDRESS"
-    line: "IPV6_ADDRESS={{ pihole_ipv6_enabled | ternary(pihole_ipv6_address, '') }}"
-  become: true
-  notify: pihole_restart_required
-
 - name: Docker pull pihole/pihole:latest
   community.general.docker_image:
     name: pihole/pihole:latest
     source: pull
     force_source: true
-  notify: pihole_restart_required
-
-- name: Flush handlers to set variable pihole_restart_required
-  ansible.builtin.meta: flush_handlers
 
 - name: Start pihole docker container
   community.general.docker_container:
@@ -47,12 +11,13 @@
     image: pihole/pihole:latest
     state: started
     restart_policy: unless-stopped
-    recreate: "{{ pihole_restart_required }}"
+    comparisons:
+      '*': strict
     keep_volumes: false
     hostname: "{{ inventory_hostname }}"
     volumes:
       - "{{ pihole_path }}/data:/etc/pihole"
-      - "{{ pihole_path }}/dnsmasq.d/data:/etc/dnsmasq.d"
+      - "{{ pihole_path }}/dnsmasq.d:/etc/dnsmasq.d"
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     ports: "{{ (pihole_network_mode == 'bridge') | ternary(pihole_ports, []) }}"
@@ -61,8 +26,8 @@
       - CAP_NET_BIND_SERVICE  # allow FTLDNS to bind to 53
       - CAP_SYS_NICE
     env:
-      ServerIP: "{{ pihole_ipv4_address }}"
-      ServerIPv6: "{{ pihole_ipv6_enabled | ternary(pihole_ipv6_address, '') }}"
+      FTLCONF_LOCAL_IPV4: "{{ pihole_ipv4_address }}"
+      FTLCONF_LOCAL_IPV6: "{{ pihole_ipv6_enabled | ternary(pihole_ipv6_address, '') }}"
       IPv6: "{{ pihole_ipv6_enabled | string }}"
       DNSMASQ_LISTENING: "all"
       DNSSEC: "{{ pihole_dnssec | string }}"

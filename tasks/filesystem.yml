@@ -16,11 +16,3 @@
     path: "{{ pihole_path }}/dnsmasq.d"
     state: directory
   become: true
-
-# use copy + force:no to "touch" only if doesn't exist
-- name: Create setupVars.conf
-  ansible.builtin.copy:
-    content: ""
-    dest: "{{ pihole_path }}/data/setupVars.conf"
-    force: false
-  become: true

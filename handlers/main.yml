@@ -1,9 +1,0 @@
----
-- name: pihole_restart_required
-  set_fact:
-    pihole_restart_required: true
-
-- name: pihole_restart
-  docker_container:
-    name: pihole
-    restart: true
