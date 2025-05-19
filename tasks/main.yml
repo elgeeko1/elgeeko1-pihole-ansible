@@ -1,15 +1,13 @@
 ---
-- name: apt update cache
+- name: Apt update cache
+  become: true
   ansible.builtin.apt:
     update_cache: true
     cache_valid_time: 3600 # 1 hr
-  become: true
 
 - name: Configure systemd-resolved
+  when: pihole_host_dns_port == 53
   ansible.builtin.import_tasks: systemd-resolved.yml
-
-- name: Configure filesystem
-  ansible.builtin.import_tasks: filesystem.yml
 
 - name: Start pihole container
   ansible.builtin.import_tasks: pihole.yml

@@ -1,14 +1,34 @@
 ---
-- name: Docker pull pihole/pihole:latest
+- name: Docker pull pihole/pihole:{{ pihole_docker_tag }}
   community.general.docker_image:
-    name: pihole/pihole:latest
+    name: pihole/pihole:{{ pihole_docker_tag }}
     source: pull
     force_source: true
+
+- name: Configure Docker macvlan network {{ pihole_network_macvlan.name }}
+  when: pihole_network_mode == 'macvlan'
+  community.general.docker_network:
+    name: "{{ pihole_network_macvlan.name }}"
+    driver: macvlan
+    driver_options:
+      macvlan_mode: private
+      parent: "{{ pihole_network_macvlan.interface }}"
+    ipam_config:
+      - subnet: "{{ pihole_network_macvlan.subnet }}"
+        gateway: "{{ pihole_network_macvlan.gateway }}"
+
+- name: Create persistent volume pihole-data
+  community.docker.docker_volume:
+    name: pihole-data
+
+- name: Create persistent volume pihole-dnsmasq
+  community.docker.docker_volume:
+    name: pihole-dnsmasq
 
 - name: Start pihole docker container
   community.general.docker_container:
     name: pihole
-    image: pihole/pihole:latest
+    image: pihole/pihole:{{ pihole_docker_tag }}
     state: started
     restart_policy: unless-stopped
     comparisons:
@@ -16,27 +36,33 @@
     keep_volumes: false
     hostname: "{{ inventory_hostname }}"
     volumes:
-      - "{{ pihole_path }}/data:/etc/pihole"
-      - "{{ pihole_path }}/dnsmasq.d:/etc/dnsmasq.d"
+      - pihole-data:/etc/pihole
+      - pihole-dnsmaq:/etc/dnsmasq.d
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
-    ports: "{{ (pihole_network_mode == 'bridge') | ternary(pihole_ports, []) }}"
-    network_mode: "{{ pihole_network_mode }}"
+    ports: "{{ (pihole_network_mode == 'bridge') | ternary(pihole_published_ports, []) }}"
+    networks: "{{ (pihole_network_mode == 'macvlan') | ternary( \
+        [{'name': pihole_network_macvlan.name, 'ipv4_address': pihole_network_macvlan.ipv4_address}], \
+        [{'name': pihole_network_mode }]  ) }}"
     capabilities:
       - CAP_NET_BIND_SERVICE  # allow FTLDNS to bind to 53
-      - CAP_SYS_NICE
+      - CAP_SYS_NICE # prioritize CPU resources
     env:
-      FTLCONF_LOCAL_IPV4: "{{ pihole_ipv4_address }}"
-      FTLCONF_LOCAL_IPV6: "{{ pihole_ipv6_enabled | ternary(pihole_ipv6_address, '') }}"
-      IPv6: "{{ pihole_ipv6_enabled | string }}"
-      DNSMASQ_LISTENING: "all"
-      DNSSEC: "{{ pihole_dnssec | string }}"
-      QUERY_LOGGING: "{{ pihole_query_logging | string }}"
-      PIHOLE_DNS_: "{{ pihole_dns }}"
-      WEBPASSWORD: "{{ pihole_web_password }}"
+      FTLCONF_webserver_api_password: "{{ pihole_web_password }}"
+      FTLCONF_dns_listeningMode: "all"
+      FTLCONF_dns_upstreams: "{{ pihole_upstream_dns }}"
+      FTLCONF_dns_dnssec: "{{ pihole_dnssec | string }}"
+      FTLCONF_dns_queryLogging: "{{ pihole_query_logging | string }}"
+      FTLCONF_misc_privacylevel: "{{ pihole_privacy_level | string}}"
       TZ: "{{ pihole_timezone }}"
+    log_driver: "local"  # default doesn't log rotate
 
-- name: Wait for pihole service to start
-  ansible.builtin.wait_for:
-    port: 53
-    timeout: 10
+# - name: Wait for pihole dns service to start
+#   ansible.builtin.wait_for:
+#     port: "{{ pihole_host_dns_port }}"
+#     timeout: 10
+
+# - name: Wait for pihole web service to start
+#   ansible.builtin.wait_for:
+#     port: "{{ pihole_host_web_port }}"
+#     timeout: 10

@@ -1,8 +1,15 @@
+---
+# docker tag of pihole to download
+pihole_docker_tag: latest
+
 # filesystem location to save persistent pihole data
 pihole_path: /opt/pihole
 
-# docker network mode for the pihole container
-# may be 'bridge' or 'host'
+# docker network mode for pihole container
+# values:
+#   host: least secure, easiest to configure, works best for mapping to host port 53
+#   macvlan: more secure, more complicated configuration, works best for a separate IP hosting port 53
+#   bridge: more secure, easiest when mapping to a host port other than 53
 pihole_network_mode: bridge
 
 # network addresses for pihole
@@ -10,8 +17,19 @@ pihole_ipv4_address: "{{ ansible_default_ipv4.address | default(ansible_all_ipv4
 pihole_ipv6_address: "{{ ansible_default_ipv6.address | default(ansible_all_ipv6_addresses[0]) }}"
 pihole_ipv6_enabled: false
 
+# in macvlan mode, the macvlan network settings
+# this may work out of the box but docker will
+# assign an arbitrary IP address which may conflict
+# with your network; better to override in your playbook
+pihole_network_macvlan:
+  name: "pihole"
+  subnet: "{{ (ansible_default_ipv4.network ~ '/' ~ ansible_default_ipv4.netmask) | ipaddr('network/prefix') }}"
+  gateway: "{{ ansible_default_ipv4.gateway }}"
+  interface: "{{ ansible_default_ipv4.interface }}"
+  ipv4_address: "" # if empty, ipv4 will be automatically set by docker
+
 # default to quad9 DNS resolvers
-pihole_dns: "9.9.9.9#53;149.112.112.112#53;2620:fe::fe#53;2620:fe::9#53"
+pihole_upstream_dns: "9.9.9.9#53;149.112.112.112#53;2620:fe::fe#53;2620:fe::9#53"
 
 # pihole web UI password
 # default password is 'pihole'
@@ -28,3 +46,9 @@ pihole_dnssec: false
 
 # timezone for pihole UI and logging
 pihole_timezone: "America/Los_Angeles"
+
+# service port on the host to open for dns queries
+pihole_host_dns_port: 53
+
+# service port on the host to open
+pihole_host_web_port: 8080

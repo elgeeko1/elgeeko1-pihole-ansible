@@ -1,8 +1,8 @@
 # ports to publish for pihole
-pihole_ports:
-  - "0.0.0.0:53:53/tcp"
-  - "0.0.0.0:53:53/udp"
-  - "[::0]:53:53/tcp"
-  - "[::0]:53:53/udp"
-  - "0.0.0.0:80:80/tcp"
-  - "[::0]:80:80/tcp"
+pihole_published_ports:
+  - "0.0.0.0:{{ pihole_host_dns_port }}:53/tcp"
+  - "0.0.0.0:{{ pihole_host_dns_port }}:53/udp"
+  - "[::0]:{{ pihole_host_dns_port }}:53/tcp"
+  - "[::0]:{{ pihole_host_dns_port }}:53/udp"
+  - "0.0.0.0:{{ pihole_host_web_port }}:443/tcp"
+  - "[::0]:{{ pihole_host_web_port }}:443/tcp"
